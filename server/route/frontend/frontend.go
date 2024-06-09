@@ -38,10 +38,27 @@ func NewFrontendService(profile *profile.Profile, store *store.Store) *FrontendS
 	}
 }
 
-func (s *FrontendService) Serve(ctx context.Context, e *echo.Echo) {
+func validatePrefix(p string) error {
+	// Canonicalize the prefix in the form "/s"
+	p = path.Join("/", p, "/")
+
+	// Special prefixes, including anything that starts with /slash (for future use)
+	badPrefixes := []string{
+		"/api", "/slash", "/robots.txt", "/sitemap.xml", "/crossdomain.xml", "/favicon.ico",
+	}
+	if util.HasPrefixes(p, badPrefixes...) || p == "/c" {
+		return fmt.Errorf("Invalid shortcut prefix %q", p)
+	}
+	return nil
+}
+
+func (s *FrontendService) Serve(ctx context.Context, e *echo.Echo) error {
 	// Use echo static middleware to serve the built dist folder.
 	// Reference: https://github.com/labstack/echo/blob/master/middleware/static.go
 	prefix := "s"
+	if err := validatePrefix(prefix); err != nil {
+		return err
+	}
 	shortcutPath := path.Join("/", prefix, ":shortcutName")
 
 	skipper := func(c echo.Context) bool {
@@ -74,6 +91,7 @@ func (s *FrontendService) Serve(ctx context.Context, e *echo.Echo) {
 
 	s.registerRoutes(e, shortcutPath)
 	s.registerFileRoutes(ctx, e, shortcutPath)
+	return nil
 }
 
 func (s *FrontendService) registerRoutes(e *echo.Echo, shortcutPath string) {
