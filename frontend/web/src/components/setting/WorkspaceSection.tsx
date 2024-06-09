@@ -29,6 +29,13 @@ const WorkspaceSection = () => {
     });
   };
 
+  const handleShortcutPrefixChange = async (value: string) => {
+    setWorkspaceSetting({
+      ...workspaceSetting,
+      shortcutPrefix: value,
+    });
+  };
+
   const handleFaviconProvierChange = async (value: string) => {
     setWorkspaceSetting({
       ...workspaceSetting,
@@ -57,6 +64,9 @@ const WorkspaceSection = () => {
     }
     if (!isEqual(originalWorkspaceSetting.current.instanceUrl, workspaceSetting.instanceUrl)) {
       updateMask.push("instance_url");
+    }
+    if (!isEqual(originalWorkspaceSetting.current.shortcutPrefix, workspaceSetting.shortcutPrefix)) {
+      updateMask.push("shortcut_prefix");
     }
     if (!isEqual(originalWorkspaceSetting.current.customStyle, workspaceSetting.customStyle)) {
       updateMask.push("custom_style");
@@ -99,6 +109,14 @@ const WorkspaceSection = () => {
             placeholder="Your instance URL. Using for website SEO. Leave it empty if you don't want cawler to index your website."
             value={workspaceSetting.instanceUrl}
             onChange={(event) => handleInstanceUrlChange(event.target.value)}
+          />
+          <div className="w-full flex flex-col justify-start items-start">
+          <p className="font-medium dark:text-gray-400">Shortcut URL prefix</p>
+          <Input
+            className="w-full mt-2"
+            placeholder="The prefix for all URL shortcuts, like 's'."
+            value={workspaceSetting.shortcutPrefix}
+            onChange={(event) => handleShortcutPrefixChange(event.target.value)}
           />
         </div>
         <div className="w-full flex flex-col justify-start items-start">

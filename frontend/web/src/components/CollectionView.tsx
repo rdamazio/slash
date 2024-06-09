@@ -11,6 +11,7 @@ import useResponsiveWidth from "@/hooks/useResponsiveWidth";
 import { useCollectionStore, useShortcutStore, useUserStore } from "@/stores";
 import { Collection } from "@/types/proto/api/v1/collection_service";
 import { Shortcut } from "@/types/proto/api/v1/shortcut_service";
+import { useStorage } from "@plasmohq/storage/hook";
 import { showCommonDialog } from "./Alert";
 import CreateCollectionDialog from "./CreateCollectionDrawer";
 import Icon from "./Icon";
@@ -31,6 +32,7 @@ const CollectionView = (props: Props) => {
   const collectionStore = useCollectionStore();
   const shortcutList = useShortcutStore().getShortcutList();
   const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
+  const [shortcutPrefix] = useStorage<string>("shortcut_prefix", "s");
   const shortcuts = collection.shortcutIds
     .map((shortcutId) => shortcutList.find((shortcut) => shortcut?.id === shortcutId))
     .filter(Boolean) as any as Shortcut[];
@@ -57,7 +59,7 @@ const CollectionView = (props: Props) => {
   };
 
   const handleOpenAllShortcutsButtonClick = () => {
-    shortcuts.forEach((shortcut: Shortcut) => window.open(`/s/${shortcut.name}`));
+    shortcuts.forEach((shortcut: Shortcut) => window.open(`/${shortcutPrefix}/${shortcut.name}`));
   };
 
   return (

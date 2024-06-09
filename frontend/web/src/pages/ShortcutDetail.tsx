@@ -20,6 +20,7 @@ import { useUserStore, useShortcutStore } from "@/stores";
 import { Shortcut } from "@/types/proto/api/v1/shortcut_service";
 import { Role } from "@/types/proto/api/v1/user_service";
 import { convertVisibilityFromPb } from "@/utils/visibility";
+import { useStorage } from "@plasmohq/storage/hook";
 
 interface State {
   showEditDrawer: boolean;
@@ -38,10 +39,11 @@ const ShortcutDetail = () => {
     showEditDrawer: false,
   });
   const [showQRCodeDialog, setShowQRCodeDialog] = useState<boolean>(false);
+  const [shortcutPrefix] = useStorage<string>("shortcut_prefix", "s");
   const loadingState = useLoading(true);
   const creator = userStore.getUserById(shortcut.creatorId);
   const havePermission = currentUser.role === Role.ADMIN || shortcut.creatorId === currentUser.id;
-  const shortcutLink = absolutifyLink(`/s/${shortcut.name}`);
+  const shortcutLink = absolutifyLink(`/${shortcutPrefix}/${shortcut.name}`);
 
   useEffect(() => {
     (async () => {

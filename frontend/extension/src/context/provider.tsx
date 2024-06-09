@@ -10,6 +10,7 @@ interface Props {
 const StorageContextProvider = ({ children }: Props) => {
   const storage = new Storage();
   const [instanceUrl, setInstanceUrl] = useState<string | undefined>(undefined);
+  const [shortcutPrefix, setShortcutPrefix] = useState<string | undefined>("s");
   const [accessToken, setAccessToken] = useState<string | undefined>(undefined);
   const [defaultVisibility, setDefaultVisibility] = useState<Visibility>(Visibility.PRIVATE);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -17,6 +18,7 @@ const StorageContextProvider = ({ children }: Props) => {
   useEffect(() => {
     (async () => {
       let instanceUrl = await storage.get("instance_url");
+      const shortcutPrefix = await storage.get("shortcut_prefix")
       const accessToken = await storage.get("access_token");
       const defaultVisibility = (await storage.get("default_visibility")) as Visibility;
 
@@ -29,6 +31,7 @@ const StorageContextProvider = ({ children }: Props) => {
       }
 
       setInstanceUrl(instanceUrl);
+      setShortcutPrefix(shortcutPrefix)
       setAccessToken(accessToken);
       setDefaultVisibility(defaultVisibility);
       setIsInitialized(true);
@@ -37,6 +40,9 @@ const StorageContextProvider = ({ children }: Props) => {
     storage.watch({
       instance_url: (c) => {
         setInstanceUrl(c.newValue);
+      },
+      shortcut_prefix: (c) => {
+        setShortcutPrefix(c.newValue);
       },
       access_token: (c) => {
         setAccessToken(c.newValue);
@@ -51,6 +57,7 @@ const StorageContextProvider = ({ children }: Props) => {
     <StorageContext.Provider
       value={{
         instanceUrl,
+        shortcutPrefix,
         accessToken,
         defaultVisibility,
         setInstanceUrl: (instanceUrl: string) => storage.set("instance_url", instanceUrl),

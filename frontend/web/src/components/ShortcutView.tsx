@@ -1,6 +1,7 @@
 import classNames from "classnames";
 import { Link } from "react-router-dom";
 import { Shortcut } from "@/types/proto/api/v1/shortcut_service";
+import { useStorage } from "@plasmohq/storage/hook";
 import Icon from "./Icon";
 import LinkFavicon from "./LinkFavicon";
 import ShortcutActionsDropdown from "./ShortcutActionsDropdown";
@@ -13,6 +14,7 @@ interface Props {
   onClick?: () => void;
 }
 
+const [shortcutPrefix] = useStorage<string>("shortcut_prefix", "s");
 const ShortcutView = (props: Props) => {
   const { shortcut, className, showActions, alwaysShowLink, onClick } = props;
 
@@ -44,7 +46,7 @@ const ShortcutView = (props: Props) => {
           "hidden group-hover:block ml-1 w-6 h-6 p-1 shrink-0 rounded-lg bg-gray-200 dark:bg-zinc-900 hover:opacity-80",
           alwaysShowLink && "!block",
         )}
-        to={`/s/${shortcut.name}`}
+        to={`/${shortcutPrefix}/${shortcut.name}`}
         target="_blank"
         onClick={(e) => e.stopPropagation()}
       >

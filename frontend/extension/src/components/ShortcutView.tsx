@@ -11,10 +11,12 @@ interface Props {
 const ShortcutView = (props: Props) => {
   const { shortcut } = props;
   const [domain] = useStorage<string>("domain", "");
+  const [shortcutPrefix] = useStorage<string>("shortcut_prefix", "s");
   const favicon = getFaviconWithGoogleS2(shortcut.link);
 
   const handleShortcutLinkClick = () => {
-    const shortcutLink = `${domain}/s/${shortcut.name}`;
+    // TODO: canonicalize
+    const shortcutLink = `${domain}/${shortcutPrefix}/${shortcut.name}`;
     chrome.tabs.create({ url: shortcutLink });
   };
 

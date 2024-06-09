@@ -13,7 +13,9 @@ chrome.webRequest.onBeforeRequest.addListener(
       const shortcutName = getShortcutNameFromUrl(param.url);
       if (shortcutName) {
         const instanceUrl = (await storage.getItem<string>("domain")) || "";
-        return chrome.tabs.update({ url: `${instanceUrl}/s/${shortcutName}` });
+        // TODO: canonicalize
+        const shortcutPrefix = (await storage.getItem<string>("shortcut_prefix") || "s");
+        return chrome.tabs.update({ url: `${instanceUrl}/${shortcutPrefix}/${shortcutName}` });
       }
     })();
   },
@@ -30,6 +32,7 @@ const getShortcutNameFromUrl = (urlString: string) => {
 
 const getShortcutNameFromSearchUrl = (urlString: string) => {
   const url = new URL(urlString);
+  // TODO
   if ((url.hostname === "www.google.com" || url.hostname === "www.bing.com") && url.pathname === "/search") {
     const params = new URLSearchParams(url.search);
     const shortcutName = params.get("q");

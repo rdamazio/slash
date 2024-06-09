@@ -2,6 +2,7 @@ import { Divider } from "@mui/joy";
 import classNames from "classnames";
 import { Link } from "react-router-dom";
 import { Shortcut } from "@/types/proto/api/v1/shortcut_service";
+import { useStorage } from "@plasmohq/storage/hook";
 import Icon from "./Icon";
 import LinkFavicon from "./LinkFavicon";
 
@@ -9,12 +10,13 @@ interface Props {
   shortcut: Shortcut;
 }
 
+const [shortcutPrefix] = useStorage<string>("shortcut_prefix", "s");
 const ShortcutFrame = ({ shortcut }: Props) => {
   return (
     <div className="w-full h-full flex flex-col justify-center items-center p-8">
       <Link
         className="w-72 max-w-full border dark:border-zinc-900 dark:bg-zinc-900 p-6 pb-4 rounded-2xl shadow-xl dark:text-gray-400 hover:opacity-80"
-        to={`/s/${shortcut.name}`}
+        to={`/${shortcutPrefix}/${shortcut.name}`}
         target="_blank"
       >
         <div className={classNames("w-12 h-12 flex justify-center items-center overflow-clip rounded-lg shrink-0")}>

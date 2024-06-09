@@ -9,6 +9,7 @@ import { absolutifyLink } from "@/helpers/utils";
 import { useUserStore, useViewStore } from "@/stores";
 import { Shortcut } from "@/types/proto/api/v1/shortcut_service";
 import { convertVisibilityFromPb } from "@/utils/visibility";
+import { useStorage } from "@plasmohq/storage/hook";
 import Icon from "./Icon";
 import LinkFavicon from "./LinkFavicon";
 import ShortcutActionsDropdown from "./ShortcutActionsDropdown";
@@ -24,7 +25,9 @@ const ShortcutCard = (props: Props) => {
   const userStore = useUserStore();
   const viewStore = useViewStore();
   const creator = userStore.getUserById(shortcut.creatorId);
-  const shortcutLink = absolutifyLink(`/s/${shortcut.name}`);
+  // TODO: canonicalize
+  const [shortcutPrefix] = useStorage<string>("shortcut_prefix", "s");
+  const shortcutLink = absolutifyLink(`/${shortcutPrefix}/${shortcut.name}`);
 
   useEffect(() => {
     userStore.getOrFetchUserById(shortcut.creatorId);
