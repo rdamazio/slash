@@ -56,8 +56,17 @@ func (s *FrontendService) Serve(ctx context.Context, e *echo.Echo) error {
 	// Use echo static middleware to serve the built dist folder.
 	// Reference: https://github.com/labstack/echo/blob/master/middleware/static.go
 	prefix := "s"
-	if err := validatePrefix(prefix); err != nil {
+	shortcutPrefixSetting, err := s.Store.GetWorkspaceSetting(ctx, &store.FindWorkspaceSetting{
+		Key: storepb.WorkspaceSettingKey_WORKSPACE_SETTING_SHORTCUT_PREFIX,
+	})
+	if err != nil {
 		return err
+	}
+	if shortcutPrefixSetting != nil {
+		prefix := shortcutPrefixSetting.GetShortcutPrefix()
+		if err := validatePrefix(prefix); err != nil {
+			return err
+		}
 	}
 	shortcutPath := path.Join("/", prefix, ":shortcutName")
 
