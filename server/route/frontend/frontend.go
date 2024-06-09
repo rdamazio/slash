@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"path"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -40,22 +41,24 @@ func NewFrontendService(profile *profile.Profile, store *store.Store) *FrontendS
 func (s *FrontendService) Serve(ctx context.Context, e *echo.Echo) {
 	// Use echo static middleware to serve the built dist folder.
 	// Reference: https://github.com/labstack/echo/blob/master/middleware/static.go
+	prefix := "s"
+	shortcutPath := path.Join("/", prefix, ":shortcutName")
+
+	skipper := func(c echo.Context) bool {
+		return util.HasPrefixes(c.Path(), "/api", "/slash.api.v1", "/robots.txt", "/sitemap.xml", shortcutPath, "/c/:collectionName")
+	}
 	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		HTML5:      true,
 		Filesystem: getFileSystem("dist"),
-		Skipper: func(c echo.Context) bool {
-			return util.HasPrefixes(c.Path(), "/api", "/slash.api.v1", "/robots.txt", "/sitemap.xml", "/s/:shortcutName", "/c/:collectionName")
-		},
+		Skipper:    skipper,
 	}))
 
 	g := e.Group("assets")
 	// Use echo gzip middleware to compress the response.
 	// Reference: https://echo.labstack.com/docs/middleware/gzip
 	g.Use(middleware.GzipWithConfig(middleware.GzipConfig{
-		Skipper: func(c echo.Context) bool {
-			return util.HasPrefixes(c.Path(), "/api", "/slash.api.v1", "/robots.txt", "/sitemap.xml", "/s/:shortcutName", "/c/:collectionName")
-		},
-		Level: 5,
+		Skipper: skipper,
+		Level:   5,
 	}))
 	g.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -66,19 +69,17 @@ func (s *FrontendService) Serve(ctx context.Context, e *echo.Echo) {
 	g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		HTML5:      true,
 		Filesystem: getFileSystem("dist/assets"),
-		Skipper: func(c echo.Context) bool {
-			return util.HasPrefixes(c.Path(), "/api", "/slash.api.v1", "/robots.txt", "/sitemap.xml", "/s/:shortcutName", "/c/:collectionName")
-		},
+		Skipper:    skipper,
 	}))
 
-	s.registerRoutes(e)
-	s.registerFileRoutes(ctx, e)
+	s.registerRoutes(e, shortcutPath)
+	s.registerFileRoutes(ctx, e, shortcutPath)
 }
 
-func (s *FrontendService) registerRoutes(e *echo.Echo) {
+func (s *FrontendService) registerRoutes(e *echo.Echo, shortcutPath string) {
 	rawIndexHTML := getRawIndexHTML()
 
-	e.GET("/s/:shortcutName", func(c echo.Context) error {
+	e.GET(shortcutPath, func(c echo.Context) error {
 		ctx := c.Request().Context()
 		shortcutName := c.Param("shortcutName")
 		shortcut, err := s.Store.GetShortcut(ctx, &store.FindShortcut{
@@ -117,7 +118,7 @@ func (s *FrontendService) registerRoutes(e *echo.Echo) {
 	})
 }
 
-func (s *FrontendService) registerFileRoutes(ctx context.Context, e *echo.Echo) {
+func (s *FrontendService) registerFileRoutes(ctx context.Context, e *echo.Echo, shortcutPrefix string) {
 	instanceURLSetting, err := s.Store.GetWorkspaceSetting(ctx, &store.FindWorkspaceSetting{
 		Key: storepb.WorkspaceSettingKey_WORKSPACE_SETTING_INSTANCE_URL,
 	})
@@ -147,7 +148,7 @@ Sitemap: %s/sitemap.xml`, instanceURL, instanceURL)
 			return err
 		}
 		for _, shortcut := range shortcuts {
-			urlsets = append(urlsets, fmt.Sprintf(`<url><loc>%s/s/%s</loc></url>`, instanceURL, shortcut.Name))
+			urlsets = append(urlsets, fmt.Sprintf(`<url><loc>%s</loc></url>`, path.Join(instanceURL, shortcutPrefix, shortcut.Name)))
 		}
 		// Append collection list.
 		collections, err := s.Store.ListCollections(ctx, &store.FindCollection{
